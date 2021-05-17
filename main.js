@@ -3,6 +3,7 @@ import Util from "./util.js";
 import SelectTool from "./select.js";
 import LineTool from "./line.js";
 import {Event, EventDispatcher, EventHandler} from "./event.js";
+import {Layer, LayerStack} from "./layer.js";
 
 const BIN_HALF_DONT_REF = 20;
 const CONFIG = {
@@ -30,6 +31,10 @@ let lastTimestamp = 0;
 let lastFrame = 0;
 let framesPerSec = 0;
 
+
+let layerStack;
+let testLayer, testOver;
+
 function setup() {
   canvas = document.getElementById("canvas");
   gfx = canvas.getContext("2d");
@@ -44,6 +49,12 @@ function setup() {
 
   elements = [];
   window.addEventListener("resize", onResize);
+
+  layerStack = new LayerStack("TestStack");
+  testLayer = new Layer("TestLayer");
+  testOver = new Layer("TestOverlay");
+  layerStack.pushLayer(testLayer);
+  layerStack.pushOverlay(testOver);
 }
 
 function onResize() {
@@ -75,7 +86,7 @@ function loop() {
 }
 
 function perSecond() {
-  // console.log(new Event("Tester Event"))
+  // console.log(layerStack.toString());
 }
 
 function perFrame() {
