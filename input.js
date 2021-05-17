@@ -14,4 +14,8 @@ export default class Input {
     this.mouseY = ev.clientY;
     // console.log([this.mouseX,this.mouseY])
   }
+
+  onKeyPress(ev) {
+    
+  }
 }

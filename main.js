@@ -2,6 +2,7 @@ import Input from "./input.js";
 import Util from "./util.js";
 import SelectTool from "./select.js";
 import LineTool from "./line.js";
+import {Event, EventDispatcher, EventHandler} from "./event.js";
 
 const BIN_HALF_DONT_REF = 20;
 const CONFIG = {
@@ -74,6 +75,7 @@ function loop() {
 }
 
 function perSecond() {
+  // console.log(new Event("Tester Event"))
 }
 
 function perFrame() {
