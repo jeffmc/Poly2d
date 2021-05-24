@@ -5,7 +5,7 @@ export default class Input {
     this.mouseY = 0;
   }
 
-  setup() {
+  init() {
     window.addEventListener("mousemove", this.onMouseMove.bind(this));
   }
 

@@ -5,8 +5,19 @@
   <body>
     <canvas id="canvas">
 
-    <script src="event.js" type="module" async defer></script>
-    <script src="layer.js" type="module" async defer></script>
+    <script id="vertShader" type="notjs">
+      Here is example text.
+      All shown within one element.
+      In plaintext here within the HTML file,
+      being loaded by the JS engine.
+    </script>
+    <script id="fragShader" type="notjs">
+
+    </script>
+    <script src="gl-matrix-min.js" type="script"
+    <script src="event.js" type="module" async ></script>
+    <script src="layer.js" type="module" async ></script>
+    <script src="renderer.js" type="module" async ></script>
     <script src="input.js" type="module" async></script>
     <script src="util.js" type="module" async></script>
     <script src="select.js" type="module" async></script>

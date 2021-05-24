@@ -4,6 +4,7 @@ import SelectTool from "./select.js";
 import LineTool from "./line.js";
 import {Event, EventDispatcher, EventHandler} from "./event.js";
 import {Layer, LayerStack} from "./layer.js";
+import {Renderer} from "./renderer.js";
 
 const BIN_HALF_DONT_REF = 20;
 const CONFIG = {
@@ -16,14 +17,15 @@ const CONFIG = {
     bg: [40,40,40],
     cursor: [215,100,215],
     grid: [160,160,160],
+  },
+  renderConfig: {
+    autoStretchFullscreen: true,
   }
 }
 
-let canvas, gfx;
+let input, renderer, util, selectTool, lineTool; // various singletons
 
-let input, util, selectTool, lineTool; // various singletons
-
-let elements; // drawn elements
+// let elements; // TODO: move to own class
 
 let frameCount = 0;
 let framesSinceLast = 0;
@@ -31,30 +33,30 @@ let lastTimestamp = 0;
 let lastFrame = 0;
 let framesPerSec = 0;
 
+// let layerStack;
+// let testLayer, testOver;
 
-let layerStack;
-let testLayer, testOver;
-
-function setup() {
-  canvas = document.getElementById("canvas");
-  gfx = canvas.getContext("2d");
-  onResize();
-  
+function init() {
   input = new Input(CONFIG);
+  renderer = new Renderer(CONFIG.renderConfig, document.getElementById("canvas"));
   util = new Util(CONFIG, input);
   selectTool = new SelectTool(CONFIG);
   lineTool = new LineTool(CONFIG, util);
 
-  input.setup();
+  input.init();
+  renderer.init();
 
-  elements = [];
+  // elements = [];
+
   window.addEventListener("resize", onResize);
+  onResize();
 
-  layerStack = new LayerStack("TestStack");
-  testLayer = new Layer("TestLayer");
-  testOver = new Layer("TestOverlay");
-  layerStack.pushLayer(testLayer);
-  layerStack.pushOverlay(testOver);
+  // layerStack = new LayerStack("TestStack");
+  // testLayer = new Layer("TestLayer");
+  // testOver = new Layer("TestOverlay");
+  // layerStack.pushLayer(testLayer);
+  // layerStack.pushOverlay(testOver);
+
 }
 
 function onResize() {
@@ -62,6 +64,8 @@ function onResize() {
   canvas.height = window.innerHeight;
   CONFIG.pWidth = canvas.width;
   CONFIG.pHeight = canvas.height;
+
+  renderer.onResize();
 }
 
 function loop() {
@@ -75,7 +79,6 @@ function loop() {
     framesPerSec = Math.round(framesSinceLast / delta * 1000);
     framesSinceLast = 0;
     lastTimestamp = rn;
-    console.log(`${framesPerSec} FPS`);
 
     perSecond();
   }
@@ -86,13 +89,15 @@ function loop() {
 }
 
 function perSecond() {
+  console.log(`${framesPerSec} FPS`);
+
   // console.log(layerStack.toString());
 }
 
 function perFrame() {
-  gfx.fillStyle = `rgb(${CONFIG.color.bg.join(",")}`;
-  gfx.strokeStyle = "transparent";
-  gfx.fillRect(0,0, CONFIG.pWidth, CONFIG.pHeight);
+  renderer.fillStyle(`rgb(${CONFIG.color.bg.join(",")}`);
+  renderer.strokeStyle("transparent");
+  renderer.rect(0,0, CONFIG.pWidth, CONFIG.pHeight);
 
   paintGridDots();
   paintCursor();
@@ -101,26 +106,30 @@ function perFrame() {
 }
 
 function paintGridDots() {
-  gfx.fillStyle = `rgb(${CONFIG.color.grid.join(",")}`;
-  gfx.strokeStyle = "transparent";
+  renderer.fillStyle(`rgb(${CONFIG.color.grid.join(",")}`);
+  renderer.strokeStyle("transparent");
   for (let x=CONFIG.bin_half+(CONFIG.pWidth % CONFIG.bin_size) / 2; 
     x < CONFIG.pWidth; 
     x += CONFIG.bin_size ) {
     for ( let y=CONFIG.bin_half+(CONFIG.pHeight % CONFIG.bin_size) / 2;
       y < CONFIG.pHeight;
       y += CONFIG.bin_size ) {
-  gfx.fillRect(x-0.5,y-0.5, 1, 1); // centered rectangle TODO: ADD CONFIG FOR DIAMETER OF GRID DOTS
+  renderer.rect(x-0.5,y-0.5, 1, 1); // centered rectangle TODO: ADD CONFIG FOR DIAMETER OF GRID DOTS
     }
   }
+  let x = CONFIG.pWidth * 0.5 - 2;
+  let y = CONFIG.pHeight * 0.5 - 2;
+  renderer.fillStyle(`rgb(255,0,0)`);
+  renderer.rect(x,y,4,4);
 }
 
 function paintCursor() {
   let z = util.getCursorCoords();
-  gfx.fillStyle = "red";
-  gfx.strokeStyle = `rgb(${CONFIG.color.cursor.join(",")})`;
-  gfx.beginPath();
-  gfx.ellipse(z[0],z[1],5,5,0,0,Math.PI*2);
-  gfx.stroke();
+  renderer.fillStyle("red");
+  renderer.strokeStyle(`rgb(${CONFIG.color.cursor.join(",")})`);
+  renderer.beginPath();
+  renderer.ellipse(z[0],z[1],5,5,0,0,Math.PI*2);
+  renderer.stroke();
 }
 
 /*
@@ -155,5 +164,5 @@ function paintElements() {
   }
 }
 
-setup();
+init();
 loop();
