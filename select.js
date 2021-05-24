@@ -1,4 +1,4 @@
-export default class SelectTool {
+export class SelectTool {
   constructor(cfg) {
     this.cfg = cfg;
   }

@@ -1,4 +1,4 @@
-export default class Util {
+export class Util {
   constructor(cfg, input) {
     this.cfg = cfg;
     this.input = input;

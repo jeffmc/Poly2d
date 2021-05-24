@@ -1,4 +1,4 @@
-export default class LineTool {
+export class LineTool {
   constructor(cfg,util) {
     this.cfg = cfg;
     this.util = util;

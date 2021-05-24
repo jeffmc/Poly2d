@@ -1,14 +1,18 @@
 export class Renderer {
-  constructor(rdrcfg, htmlCanvas) {
-    this.renderConfig = rdrcfg;
+  constructor(config, htmlCanvas, cam = null) {
+    this.config = config;
     this.htmlCanvas = htmlCanvas;
+    this.camera = cam;
     this.get2DContext();
   }
   init() {
     console.log("Init renderer!");
-    console.log(`Auto-strech fullscreen: ${this.renderConfig.autoStretchFullscreen}`);
+    console.log(`Auto-strech fullscreen: ${this.config.autoStretchFullscreen}`);
 
     // console.log(document.querySelector("#vertShader").text)
+  }
+  updateTransformFromCamera() {
+    this.gfx.setTransform(this.camera.getTransform());
   }
   get2DContext() {
     this.gfx = this.htmlCanvas.getContext("2d", 
@@ -21,6 +25,11 @@ export class Renderer {
   onResize() {
 
   }
+  setCamera(cam) {
+    this.camera = cam
+  }
+
+  // CanvasRenderingContext2D SPECIFIC FUNCTIONS
   fillStyle(style) {
     this.gfx.fillStyle = style;
   }

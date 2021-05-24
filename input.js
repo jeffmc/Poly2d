@@ -1,4 +1,4 @@
-export default class Input {
+export class Input {
   constructor(cfg) {
     this.cfg = cfg;
     this.mouseX = 0;

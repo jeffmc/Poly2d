@@ -1,14 +1,15 @@
-import Input from "./input.js";
-import Util from "./util.js";
-import SelectTool from "./select.js";
-import LineTool from "./line.js";
+import {Input} from "./input.js";
+import {Util} from "./util.js";
+import {SelectTool} from "./select.js";
+import {LineTool} from "./line.js";
 import {Event, EventDispatcher, EventHandler} from "./event.js";
 import {Layer, LayerStack} from "./layer.js";
 import {Renderer} from "./renderer.js";
+import {Camera} from "./camera.js";
 
-const BIN_HALF_DONT_REF = 20;
+const BIN_HALF_DONT_REF = 5;
 const CONFIG = {
-  pWidth: 640,
+  pWidth: 640, // p is for pixel
   pHeight: 480,
   bin_half: BIN_HALF_DONT_REF,
   bin_size: BIN_HALF_DONT_REF*2,
@@ -18,12 +19,10 @@ const CONFIG = {
     cursor: [215,100,215],
     grid: [160,160,160],
   },
-  renderConfig: {
-    autoStretchFullscreen: true,
-  }
+  autoStretchFullscreen: true,
 }
 
-let input, renderer, util, selectTool, lineTool; // various singletons
+let input, renderer, camera, util, selectTool, lineTool; // various singletons
 
 // let elements; // TODO: move to own class
 
@@ -38,12 +37,14 @@ let framesPerSec = 0;
 
 function init() {
   input = new Input(CONFIG);
-  renderer = new Renderer(CONFIG.renderConfig, document.getElementById("canvas"));
+  camera = new Camera(CONFIG);
+  renderer = new Renderer(CONFIG, document.getElementById("canvas"), camera);
   util = new Util(CONFIG, input);
   selectTool = new SelectTool(CONFIG);
   lineTool = new LineTool(CONFIG, util);
 
   input.init();
+  camera.init();
   renderer.init();
 
   // elements = [];
@@ -65,6 +66,7 @@ function onResize() {
   CONFIG.pWidth = canvas.width;
   CONFIG.pHeight = canvas.height;
 
+  camera.onResize();
   renderer.onResize();
 }
 
@@ -89,18 +91,24 @@ function loop() {
 }
 
 function perSecond() {
-  console.log(`${framesPerSec} FPS`);
+  // console.log(`${framesPerSec} FPS`);
 
   // console.log(layerStack.toString());
 }
 
 function perFrame() {
+  // Background fill
   renderer.fillStyle(`rgb(${CONFIG.color.bg.join(",")}`);
   renderer.strokeStyle("transparent");
   renderer.rect(0,0, CONFIG.pWidth, CONFIG.pHeight);
 
+  renderer.updateTransformFromCamera();
+
   paintGridDots();
   paintCursor();
+  
+  renderer.fillStyle(`rgb(255,0,0)`);
+  renderer.rect(-2,-2,4,4);
   // paintPlausibleSegment();
   // paintElements();
 }
@@ -117,10 +125,6 @@ function paintGridDots() {
   renderer.rect(x-0.5,y-0.5, 1, 1); // centered rectangle TODO: ADD CONFIG FOR DIAMETER OF GRID DOTS
     }
   }
-  let x = CONFIG.pWidth * 0.5 - 2;
-  let y = CONFIG.pHeight * 0.5 - 2;
-  renderer.fillStyle(`rgb(255,0,0)`);
-  renderer.rect(x,y,4,4);
 }
 
 function paintCursor() {
