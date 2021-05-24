@@ -2,7 +2,7 @@ export class Renderer {
   constructor(rdrcfg, htmlCanvas) {
     this.renderConfig = rdrcfg;
     this.htmlCanvas = htmlCanvas;
-    this.gfx = null;
+    this.get2DContext();
   }
   init() {
     console.log("Init renderer!");
