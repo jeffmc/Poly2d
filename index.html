@@ -5,14 +5,19 @@
   <body>
     <canvas id="canvas">
 
-    <script id="vertShader" type="notjs">
-      Here is example text.
-      All shown within one element.
-      In plaintext here within the HTML file,
-      being loaded by the JS engine.
+    <script id="vertex" type="notjs">
+      attribute vec3 a_pos;
+
+      void main() {
+        gl_Position = vec4(a_pos,1.0);
+      }
     </script>
-    <script id="fragShader" type="notjs">
-        more example test, fragShader element, very similar to the above.
+    <script id="fragment" type="notjs">
+      precision mediump float; 
+
+      void main() {
+        gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+      }
     </script>
     <script src="gl-matrix-min.js" type="script"
     <script src="event.js" type="module" async ></script>

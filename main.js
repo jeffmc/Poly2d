@@ -4,7 +4,7 @@ import {SelectTool} from "./select.js";
 import {LineTool} from "./line.js";
 import {Event, EventDispatcher, EventHandler} from "./event.js";
 import {Layer, LayerStack} from "./layer.js";
-import {Renderer} from "./renderer.js";
+import {Renderer, Shader} from "./renderer.js";
 import {Camera} from "./camera.js";
 
 const BIN_HALF_DONT_REF = 5;
@@ -15,15 +15,14 @@ const CONFIG = {
   bin_size: BIN_HALF_DONT_REF*2,
   snappingEnabled: true,
   color: {
-    bg: [40,40,40],
-    cursor: [215,100,215],
-    grid: [160,160,160],
+    bg: [0.2,0.2,0.2],
+    cursor: [0.8,0.4,0.8],
+    grid: [0.6,0.6,0.6],
   },
   autoStretchFullscreen: true,
 }
 
-let input, renderer, camera, util, selectTool, lineTool; // various singletons
-
+let input, renderer, camera, util, selectTool, lineTool;
 // let elements; // TODO: move to own class
 
 let frameCount = 0;
@@ -32,8 +31,7 @@ let lastTimestamp = 0;
 let lastFrame = 0;
 let framesPerSec = 0;
 
-// let layerStack;
-// let testLayer, testOver;
+let shader, vertexBuffer;
 
 function init() {
   input = new Input(CONFIG);
@@ -47,19 +45,25 @@ function init() {
   camera.init();
   renderer.init();
 
-  // elements = [];
-
   window.addEventListener("resize", onResize);
   onResize();
 
-  // layerStack = new LayerStack("TestStack");
-  // testLayer = new Layer("TestLayer");
-  // testOver = new Layer("TestOverlay");
-  // layerStack.pushLayer(testLayer);
-  // layerStack.pushOverlay(testOver);
+  let gl = renderer.gfx;
 
+  shader = new Shader("#vertex", "#fragment");
+
+  vertexBuffer = gl.createBuffer();
+  let verts = new Float32Array([
+    -0.5,-0.5, 0.0,
+     0.5,-0.5, 0.0,
+     0.0, 0.5, 0.0,
+    -0.9, 0.9, 0.0,
+    -0.6, -0.5, 0.0,
+    -0.7, 0.8, 0.0,
+  ]);
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW, 0);
 }
-
 function onResize() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -69,10 +73,8 @@ function onResize() {
   camera.onResize();
   renderer.onResize();
 }
-
 function loop() {
   requestAnimationFrame(loop);
-  
   let rn = Date.now();
   let delta = rn - lastTimestamp;
   let timestep = rn - lastFrame;
@@ -81,36 +83,38 @@ function loop() {
     framesPerSec = Math.round(framesSinceLast / delta * 1000);
     framesSinceLast = 0;
     lastTimestamp = rn;
-
     perSecond();
   }
   framesSinceLast++;
   frameCount++;
-  
-  perFrame();
+  update();
 }
-
 function perSecond() {
   // console.log(`${framesPerSec} FPS`);
-
   // console.log(layerStack.toString());
 }
 
-function perFrame() {
-  // Background fill
-  renderer.fillStyle(`rgb(${CONFIG.color.bg.join(",")}`);
-  renderer.strokeStyle("transparent");
-  renderer.rect(0,0, CONFIG.pWidth, CONFIG.pHeight);
+function update() {
 
-  renderer.updateTransformFromCamera();
+  // renderer.updateTransformFromCamera();
+  renderer.begin();
+  // paintGridDots();
+  // paintCursor();
 
-  paintGridDots();
-  paintCursor();
+  let gl = renderer.gfx;
   
-  renderer.fillStyle(`rgb(255,0,0)`);
-  renderer.rect(-2,-2,4,4);
+  gl.useProgram(shader.program);
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+
+  let posLoc = shader.getAttribLocation("a_pos");
+  gl.vertexAttribPointer(posLoc, 3, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(posLoc);
+
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+
   // paintPlausibleSegment();
   // paintElements();
+  renderer.end();
 }
 
 function paintGridDots() {
