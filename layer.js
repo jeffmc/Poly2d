@@ -5,8 +5,8 @@ export class Layer {
   
   onAttach() {}
 	onDetach() {}
-	onUpdate(timestep) {}
-	onDebugRender() {}
+	onUpdate(deltaMilliseconds) {}
+	onDebug(deltaMilliseconds) {}
 	onEvent(event) {}
   toString() {
     return this.debugName;
@@ -33,31 +33,18 @@ export class LayerStack {
     overlay.onAttach();
   }
 	popLayer(layer) {
-    let fi = this.layers.indexOf(overlay);
-    let li = this.layers.lastIndexOf(overlay);
-    if (fi != li) {
-      let msg = `ERROR: LAYER INDEXED MULTIPLE TIMES IN STACK (${layer.debugName})`;
-      alert(msg);
-      console.error(msg);
-      return;
+    let idx = this.layers.indexOf(layer);
+    if (idx >= this.layerIndex) {
+      layer.onDetach();
+      this.layers.splice(idx,1);
     }
-    layer.onDetach();
-    this.layers.splice(fi,1);
   }
 	popOverlay(overlay) {
-    let fi = this.layers.indexOf(overlay);
-    let li = this.layers.lastIndexOf(overlay);
-    if (fi != li) {
-      let msg = `ERROR: LAYER INDEXED MULTIPLE TIMES IN STACK (${overlay.debugName})`;
-      alert(msg);
-      console.error(msg);
-      return;
+    let idx = this.layers.indexOf(overlay);
+    if (idx < this.layerIndex) {
+      overlay.onDetach();
+      this.layers.splice(idx,1);
+      this.layerIndex--;
     }
-    overlay.onDetach();
-    this.layers.splice(fi,1);
-    this.layerIndex--;
-  }
-  toString() {
-    return `${this.debugName}: ${this.layers.join(", ")}`;
   }
 }

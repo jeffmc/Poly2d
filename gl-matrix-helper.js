@@ -1,0 +1,10 @@
+window["mat2"] = glMatrix.mat2;
+window["mat2d"] = glMatrix.mat2d;
+window["mat3"] = glMatrix.mat3;
+window["mat4"] = glMatrix.mat4;
+window["quat"] = glMatrix.quat;
+window["quat2"] = glMatrix.quat2;
+window["vec2"] = glMatrix.vec2;
+window["vec3"] = glMatrix.vec3;
+window["vec4"] = glMatrix.vec4;
+window["glMatrix"] = glMatrix.glMatrix;

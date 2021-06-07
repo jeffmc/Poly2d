@@ -17,4 +17,10 @@ export class Util {
     let z = this.cfg.snappingEnabled ? this.getSnappedCoords(this.input.mouseX, this.input.mouseY) : [this.input.mouseX, this.input.mouseY];
     return z;
   }
+  static webGLconvertToString(code) {
+    let pairs = Object.entries(WebGL2RenderingContext)
+    for (const [key,value] of pairs) {
+      if (value == code) return key;
+    }
+  }
 }

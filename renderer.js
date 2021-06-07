@@ -1,4 +1,4 @@
-let gl = null;
+import {Util} from "./util.js";
 
 export class Renderer {
   constructor(config, htmlCanvas, cam = null) {
@@ -10,7 +10,7 @@ export class Renderer {
   getWebGLContext() {
     this.gfx = this.htmlCanvas.getContext("webgl2", 
     {
-      alpha: false,
+      alpha: true,
       desynchronized: false, // IF true, tremendous flickering occurs, likely that a canvas is being drawn before completion. 
       antialias: false, // TODO: Make this derive from a parameter in constructor 
       depth: true,
@@ -20,7 +20,7 @@ export class Renderer {
       preserveDrawingBuffer: true,
       stencil: false,
     });
-    gl = this.gfx;
+    window.gl = this.gfx;
     return this.gfx;
   }
   init() {
@@ -66,8 +66,7 @@ export class Renderer {
 
 export class Shader {
   constructor(vertSel = undefined, fragSel = undefined) { 
-    this.program = gl.createProgram();
-    this.attribLocations = {};
+    this.programId = gl.createProgram();
     this.vertShader = vertSel ? this.createShader(
       document.querySelector(vertSel).text,
       gl.VERTEX_SHADER) : null;
@@ -75,6 +74,8 @@ export class Shader {
       document.querySelector(fragSel).text, 
       gl.FRAGMENT_SHADER) : null;
     this.attachAndLink();
+    this.loadUniformSpecs();
+    this.loadAttribSpecs();
   }
   createShader(sourceCode, type) {
     // Compiles either a shader of type gl.VERTEX_SHADER or gl.FRAGMENT_SHADER
@@ -88,13 +89,42 @@ export class Shader {
     return shader;
   }
   attachAndLink() {
-    gl.attachShader(this.program, this.vertShader);
-    gl.attachShader(this.program, this.fragShader);
-    gl.linkProgram(this.program);
+    gl.attachShader(this.programId, this.vertShader);
+    gl.attachShader(this.programId, this.fragShader);
+    gl.linkProgram(this.programId);
   }
-  getAttribLocation(variableName) {
-    let loc = gl.getAttribLocation(this.program, variableName);
-    this.attribLocations[variableName] = loc;
-    return loc;
+  bind() {
+    gl.useProgram(this.programId);
+  }
+  loadUniformSpecs() {
+    let uniformCount = gl.getProgramParameter(this.programId, gl.ACTIVE_UNIFORMS);
+    let unis = []
+    for (let i=0;i<uniformCount;i++) {
+      let {size, type, name} = gl.getActiveUniform(this.programId, i);
+      unis[name] = { 
+        location: i,
+        glLocation: gl.getUniformLocation(this.programId, name),
+        size: size,
+        type: type,
+        typename: Util.webGLconvertToString(type),
+        name: name,
+      };
+    }
+    this.uniformSpecs = unis;
+  }
+  loadAttribSpecs() {
+    let attribCount = gl.getProgramParameter(this.programId, gl.ACTIVE_ATTRIBUTES);
+    let attribs = []
+    for (let i=0;i<attribCount;i++) {
+      let {size, type, name} = gl.getActiveAttrib(this.programId, i);
+      attribs[name] = { 
+        location: i,
+        size: size,
+        type: type,
+        typename: Util.webGLconvertToString(type),
+        name: name,
+      };
+    }
+    this.attribSpecs = attribs;
   }
 }

@@ -6,20 +6,28 @@
     <canvas id="canvas">
 
     <script id="vertex" type="notjs">
-      attribute vec3 a_pos;
+      attribute vec3 a_Pos;
+      attribute vec4 a_Color;
+      uniform mat4 u_MVP;
+
+      varying vec4 v_Color;
 
       void main() {
-        gl_Position = vec4(a_pos,1.0);
+        v_Color = a_Color;
+        gl_Position = vec4(a_Pos,1.0) * u_MVP;
       }
     </script>
     <script id="fragment" type="notjs">
       precision mediump float; 
 
+      varying vec4 v_Color;
+
       void main() {
-        gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+        gl_FragColor = v_Color;
       }
     </script>
-    <script src="gl-matrix-min.js" type="script"
+    <script src="gl-matrix-min.js" type="module"></script>
+    <script src="gl-matrix-helper.js" type="module"></script>
     <script src="event.js" type="module" async ></script>
     <script src="layer.js" type="module" async ></script>
     <script src="renderer.js" type="module" async ></script>
@@ -28,7 +36,7 @@
     <script src="util.js" type="module" async></script>
     <script src="select.js" type="module" async></script>
     <script src="line.js" type="module" async></script>
-    <script src="main.js" type="module" async defer></script>
-
+    <script src="poly.js" type="module" async></script>
+    <script src="example.js" type="module" async defer></script>
   </body>
 </html>
