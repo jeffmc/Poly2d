@@ -7,30 +7,36 @@
 
     <script id="vertex" type="notjs">
       attribute vec3 a_Pos;
-      attribute vec4 a_Color;
+      attribute vec2 a_Texcoord;
+
       uniform mat4 u_MVP;
 
-      varying vec4 v_Color;
+      varying vec2 v_Texcoord;
 
       void main() {
-        v_Color = a_Color;
+        v_Texcoord = a_Texcoord;
         gl_Position = vec4(a_Pos,1.0) * u_MVP;
       }
     </script>
     <script id="fragment" type="notjs">
       precision mediump float; 
 
-      varying vec4 v_Color;
+      uniform vec4 u_Color;
+      uniform sampler2D u_Texture;
+
+      varying vec2 v_Texcoord;
 
       void main() {
-        gl_FragColor = v_Color;
+        gl_FragColor = u_Color * texture2D(u_Texture, v_Texcoord);
       }
     </script>
+    <!-- <script src="https://flyover.github.io/imgui-js/dist/imgui.umd.js"></script>
+    <script src="https://flyover.github.io/imgui-js/dist/imgui_impl.umd.js"></script> -->
     <script src="gl-matrix-min.js" type="module"></script>
     <script src="gl-matrix-helper.js" type="module"></script>
     <script src="event.js" type="module" async ></script>
     <script src="layer.js" type="module" async ></script>
-    <script src="renderer.js" type="module" async ></script>
+    <script src="renderer.js" type="module" async></script>
     <script src="camera.js" type="module" async ></script>
     <script src="input.js" type="module" async></script>
     <script src="util.js" type="module" async></script>

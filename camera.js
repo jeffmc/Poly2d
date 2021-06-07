@@ -1,34 +1,26 @@
 export class Camera {
-  constructor(cfg) {
-    this.config = cfg;
-    this.zoom = 1;
-    this.centerX = 0;
-    this.centerY = 0;
-    this.transform = {
-      a: 1,
-      b: 0,
-      c: 0,
-      d: 1,
-      e: 0,
-      f: 0,
-    }
+  constructor(fov, aspectRatio, nearPlane, farPlane) {
+    this.viewMatrix = mat4.create();
+    this.projMatrix = mat4.create();
+    mat4.perspective(
+      this.projMatrix, 
+      fov, aspectRatio, nearPlane, farPlane
+    );
+    mat4.fromTranslation(
+      this.viewMatrix,
+      vec4.fromValues(0,0,1)
+    )
   }
-  init() {
-    // this.transform = new DOMMatrix([this.zoom,0,this.zoom,0,this.config.pWidth*(-0.5),this.config.pHeight*(-0.5)]);
-    this.calculateMatrix();
-  }
-  calculateMatrix() {
-    this.transform = {
-      a: this.zoom,
-      b: 0,
-      c: 0,
-      d: this.zoom,
-      e: this.config.pWidth*0.5,
-      f: this.config.pHeight*0.5,
-    };
+  getViewProjectionMatrix(vp) {
+    // return mat4.multiply(vp, this.viewMatrix, this.projMatrix);
+    return mat4.copy(vp, this.viewMatrix);
   }
   onResize() {
-    this.calculateMatrix();
+    // mat4.perspective(
+    //   this.projMatrix, 
+    //   70, 
+    //   this.config.pWidth/this.config.pHeight, 
+    //   0.1, 1000);
   }
   getTransform() {
     return this.transform;

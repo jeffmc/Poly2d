@@ -5,10 +5,10 @@ import {LineTool} from "./line.js";
 import {Event, EventDispatcher, EventHandler} from "./event.js";
 import {Layer, LayerStack} from "./layer.js";
 import {Renderer, Shader} from "./renderer.js";
-import {Camera} from "./camera.js";
 
 export class Poly {
   constructor(cfg,canvas) {
+    // TODO: remove pWidth and pHeight from config. Make them their own viewportDimension/Size class.
     this.config = {
       pWidth: 640, // p is for pixel
       pHeight: 480,
@@ -33,11 +33,9 @@ export class Poly {
   }
   init() {
     this.input = new Input(this.config);
-    this.camera = new Camera(this.config);
     this.renderer = new Renderer(
       this.config,
-      this.canvas, 
-      this.camera
+      this.canvas,
     );
     this.layerStack = new LayerStack("Poly LayerStack");
     this.util = new Util(this.config, this.input);
@@ -45,7 +43,6 @@ export class Poly {
     this.lineTool = new LineTool(this.config, this.util);
 
     this.input.init();
-    this.camera.init();
     this.renderer.init();
 
     window.addEventListener("resize", this.onResize.bind(this));
@@ -66,7 +63,6 @@ export class Poly {
   }
 
   update(delta) {
-    // renderer.updateTransformFromCamera();
     this.renderer.begin();
     // paintGridDots();
     // paintCursor();
@@ -86,7 +82,7 @@ export class Poly {
     this.config.pWidth = this.canvas.width;
     this.config.pHeight = this.canvas.height;
 
-    this.camera.onResize();
+    // this.camera.onResize(); TODO: still want to trigger these calls on cameras when viewport changes
     this.renderer.onResize();
   }
 }

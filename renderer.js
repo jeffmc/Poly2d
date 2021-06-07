@@ -1,10 +1,10 @@
 import {Util} from "./util.js";
 
 export class Renderer {
-  constructor(config, htmlCanvas, cam = null) {
+  constructor(config, htmlCanvas) {
     this.config = config;
     this.htmlCanvas = htmlCanvas;
-    this.camera = cam;
+    // this.camera = cam;
     this.gfx = null;
   }
   getWebGLContext() {
@@ -25,19 +25,19 @@ export class Renderer {
   }
   init() {
     this.getWebGLContext();
-    let bg = this.config.color.bg;
-    gl.clearColor(bg[0],bg[1],bg[2],1);
   }
-  updateTransformFromCamera() {
-    // this.gfx.setTransform(this.camera.getTransform());
-  }
+  // updateTransformFromCamera() {
+  //   this.gfx.setTransform(this.camera.getTransform());
+  // }
   onResize() {
     this.gfx.viewport(0,0,this.config.pWidth,this.config.pHeight);
   }
-  setCamera(cam) {
-    this.camera = cam
-  }
+  // setCamera(cam) {
+  //   this.camera = cam
+  // }
   begin() { // before all draw calls within a frame
+    let bg = this.config.color.bg;
+    gl.clearColor(bg[0],bg[1],bg[2],1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   }
   end() { // after all draw calls within a frame
@@ -67,15 +67,18 @@ export class Renderer {
 export class Shader {
   constructor(vertSel = undefined, fragSel = undefined) { 
     this.programId = gl.createProgram();
+
     this.vertShader = vertSel ? this.createShader(
       document.querySelector(vertSel).text,
       gl.VERTEX_SHADER) : null;
     this.fragShader = fragSel ? this.createShader(
       document.querySelector(fragSel).text, 
       gl.FRAGMENT_SHADER) : null;
+
     this.attachAndLink();
     this.loadUniformSpecs();
     this.loadAttribSpecs();
+
   }
   createShader(sourceCode, type) {
     // Compiles either a shader of type gl.VERTEX_SHADER or gl.FRAGMENT_SHADER
@@ -92,16 +95,18 @@ export class Shader {
     gl.attachShader(this.programId, this.vertShader);
     gl.attachShader(this.programId, this.fragShader);
     gl.linkProgram(this.programId);
+    gl.validateProgram(this.programId);
   }
   bind() {
     gl.useProgram(this.programId);
   }
   loadUniformSpecs() {
     let uniformCount = gl.getProgramParameter(this.programId, gl.ACTIVE_UNIFORMS);
-    let unis = []
+    console.log(`UniCount: ${uniformCount}`);
+    this.uniformSpecs = []
     for (let i=0;i<uniformCount;i++) {
       let {size, type, name} = gl.getActiveUniform(this.programId, i);
-      unis[name] = { 
+      this.uniformSpecs[name] = { 
         location: i,
         glLocation: gl.getUniformLocation(this.programId, name),
         size: size,
@@ -110,14 +115,16 @@ export class Shader {
         name: name,
       };
     }
-    this.uniformSpecs = unis;
+
   }
   loadAttribSpecs() {
     let attribCount = gl.getProgramParameter(this.programId, gl.ACTIVE_ATTRIBUTES);
-    let attribs = []
+    console.log(`AttrCount: ${attribCount}`)
+    
+    this.attribSpecs = [];
     for (let i=0;i<attribCount;i++) {
       let {size, type, name} = gl.getActiveAttrib(this.programId, i);
-      attribs[name] = { 
+      this.attribSpecs[name] = { 
         location: i,
         size: size,
         type: type,
@@ -125,6 +132,5 @@ export class Shader {
         name: name,
       };
     }
-    this.attribSpecs = attribs;
   }
 }
