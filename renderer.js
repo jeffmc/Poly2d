@@ -102,7 +102,6 @@ export class Shader {
   }
   loadUniformSpecs() {
     let uniformCount = gl.getProgramParameter(this.programId, gl.ACTIVE_UNIFORMS);
-    console.log(`UniCount: ${uniformCount}`);
     this.uniformSpecs = []
     for (let i=0;i<uniformCount;i++) {
       let {size, type, name} = gl.getActiveUniform(this.programId, i);
@@ -119,8 +118,6 @@ export class Shader {
   }
   loadAttribSpecs() {
     let attribCount = gl.getProgramParameter(this.programId, gl.ACTIVE_ATTRIBUTES);
-    console.log(`AttrCount: ${attribCount}`)
-    
     this.attribSpecs = [];
     for (let i=0;i<attribCount;i++) {
       let {size, type, name} = gl.getActiveAttrib(this.programId, i);

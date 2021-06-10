@@ -1,37 +1,44 @@
-export class Camera {
-  constructor(fov, aspectRatio, nearPlane, farPlane) {
+export class OrthographicCamera {
+  constructor(left,right,bottom,top,near,far) {
     this.viewMatrix = mat4.create();
     this.projMatrix = mat4.create();
-    mat4.perspective(
-      this.projMatrix, 
-      fov, aspectRatio, nearPlane, farPlane
-    );
-    mat4.fromTranslation(
-      this.viewMatrix,
-      vec4.fromValues(0,0,1)
-    )
+    this.vp = mat4.create();
+    mat4.ortho(
+      this.projMatrix,
+      left,right,
+      bottom,top,
+      near,far);
+    this.setPos(0,0,0);
   }
-  getViewProjectionMatrix(vp) {
+  getViewProjectionMatrix() {
     mat4.fromTranslation(
       this.viewMatrix, 
       vec3.fromValues(
-        0,
-        0,
-        Math.sin(Date.now()*0.004)*2+2
+        this.x,
+        this.y,
+        this.z,
       )
     );
-    mat4.fromRotation(
-      this.projMatrix, 
-      Date.now()*0.001, 
-      vec3.fromValues(0,0,1));
-    return mat4.multiply(vp, this.viewMatrix, this.projMatrix);
+    mat4.multiply(this.vp, this.viewMatrix, this.projMatrix);
+    return this.vp;
   }
-  onResize() {
-    // mat4.perspective(
-    //   this.projMatrix, 
-    //   70, 
-    //   this.config.pWidth/this.config.pHeight, 
-    //   0.1, 1000);
+  setPos(x,y,z) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    mat4.fromTranslation(
+      this.viewMatrix,
+      vec4.fromValues(this.x,this.y,this.z)
+    );
+    mat4.multiply(this.vp, this.viewMatrix, this.projMatrix);
+  }
+  viewportResized(w,h) {
+    mat4.ortho(
+      this.projMatrix,
+      -w/h,w/h,
+      -1,1,
+      -1,1);
+    mat4.multiply(this.vp, this.viewMatrix, this.projMatrix);
   }
   getTransform() {
     return this.transform;

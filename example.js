@@ -2,19 +2,17 @@ import {Poly} from "./poly.js";
 import {Layer} from "./layer.js";
 import {Shader} from "./renderer.js";
 import {Util} from "./util.js";
-import {Camera} from "./camera.js";
+import {OrthographicCamera} from "./camera.js";
+import {Mesh} from "./mesh.js";
 
-let poly, shader, vertexBuffer, mvpLoc, colLoc, tilingLoc, camera, mvp;
-// let fBuffer, fTex;
-
-// let clear_color; 
+let poly, shader, vertexBuffer, mvpLoc, colLoc, tilingLoc, camera, vp, mpos, mscale, mtrans, mvp;
 
 class ExampleLayer extends Layer {
   constructor() {
     super("ExampleLayer");
   }
+  // TODO: move all image and texture loading into new class.
   imgLoader() {
-
       gl.bindTexture(gl.TEXTURE_2D, this.texture);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, this.image);
       gl.generateMipmap(gl.TEXTURE_2D);
@@ -25,97 +23,36 @@ class ExampleLayer extends Layer {
     let texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, type, width, height, 0, type, gl.UNSIGNED_BYTE, dataTypedArray);
-    // Other texture setup here, like filter modes and mipmap generation
     return texture;
   }
   onAttach() {
+
+    // Load texture(s)
     let vals = [
       255,255,255,
-      255,255,255,
-      255,255,255,
-      255,255,255,
-      255,255,255,
-      255,255,255,
-      255,255,255,
-      255,255,255,
-      255,255,255,
-      255,255,255,
-      255,255,255,
-      255,255,255,
-      255,255,255,
-      255,255,255,
-      255,255,255,
-      255,255,255,
     ];
-    this.texture = this.textureFromPixelArray(
-      vals, gl.RGB, 4, 4);
+    this.whiteTex = this.textureFromPixelArray(
+      vals, gl.RGB, 1, 1);
     
     this.image = new Image();
-    this.image.src = "texture.png";
+    this.image.src = "corrupt.png";
     this.image.addEventListener('load', this.imgLoader.bind(this));
 
-
     // Create camera
+    mpos = mat4.create();
+    mscale = mat4.create();
+    mtrans = mat4.create();
     mvp = mat4.create();
-    camera = new Camera(
-      this.projMatrix, 
-      70, 
-      1, 
-      0.1, 1000);
+    camera = new OrthographicCamera(
+      -16/9, 16/9,
+      -1,1,
+      -1,1);
+    vp = camera.getViewProjectionMatrix();
+    
+    // Create and compile shader
     this.shader = new Shader("#vertex", "#fragment");
 
-    // TODO: Move below code to a mesh class.
-
-    // Creating vertex buffers.
-    let vertices = new Float32Array([
-       1.0, 1.0, 1.0, // top right
-      -1.0, 1.0, 1.0, // top left
-      -1.0,-1.0, 1.0, // bottom left
-       1.0,-1.0, 1.0, // bottom right
-    ]);
-    let uvs = new Float32Array([
-      1.0, 0.0, 
-      0.0, 0.0,
-      0.0, 1.0, 
-      1.0, 1.0,
-    ]);
-    let indices = new Int8Array([
-      0,1,2,
-      0,2,3,
-    ]);
-
-    this.vertexBuffer = gl.createBuffer();
-    this.uvBuffer = gl.createBuffer();
-    this.indexBuffer = gl.createBuffer();
-
-    // Create VAO
-    this.colorQuadVao = gl.createVertexArray();
-    gl.bindVertexArray(this.colorQuadVao);
-
-    // Load indice data
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW, 0);
-
-    // Load vertice data
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW, 0);
-    let posLoc = this.shader.attribSpecs["a_Pos"].location;
-    gl.vertexAttribPointer(posLoc, 3, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(posLoc);
-
-    // Load UV data
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.uvBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, uvs, gl.STATIC_DRAW, 0);
-    let uvLoc = this.shader.attribSpecs["a_Texcoord"].location;
-    gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(uvLoc);
-
-    this.texQuadVao = gl.createVertexArray();
-    gl.bindVertexArray(this.texQuadVao);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-    gl.vertexAttribPointer(posLoc, 3, gl.FLOAT, false, 0, 0);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+    this.mesh = new Mesh(this.shader);
 
     // Load uniform data (mvp)
     this.shader.bind();
@@ -125,29 +62,45 @@ class ExampleLayer extends Layer {
   }
 
 	onDetach() {
+    // TODO: Delete / unbinds, everything else.
     console.log("ExampleLayer deattached!");
   }
 
 	onUpdate(deltaMilliseconds) {
     this.shader.bind();
 
-    camera.getViewProjectionMatrix(mvp);
+    let val = Math.sin(Date.now()*0.002);
+    camera.setPos(val,0,0);
+
+    gl.uniform1f(tilingLoc, 1);
+    gl.bindTexture(gl.TEXTURE_2D, this.whiteTex);
+    gl.bindVertexArray(this.mesh.vao);
+
+    mat4.fromTranslation(mpos, vec3.fromValues(0,0,0));
+    mat4.identity(mscale);
+    mat4.multiply(mtrans, mscale, mpos);
+    mat4.multiply(mvp, vp, mtrans);
     gl.uniformMatrix4fv(mvpLoc, false, mvp);
+    gl.uniform4f(colLoc, 1.0, 0.7, 0.7, 1.0);
 
-    let val = Math.cos(Date.now()*0.005)*0.5+1;
-    gl.uniform4f(colLoc, 1.0, val, val, 1.0);
-    gl.uniform1f(tilingLoc, Math.sin(Date.now()*0.002)*2);
-    gl.bindTexture(gl.TEXTURE_2D, this.texture);
+    gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_BYTE, 0);
 
-    gl.bindVertexArray(this.colorQuadVao);
+    mat4.fromTranslation(mpos, vec3.fromValues(0, 0, 0));
+    mat4.fromScaling(mscale, vec3.fromValues(0.5,0.2,1));
+    mat4.multiply(mtrans, mscale, mpos);
+    mat4.multiply(mvp, vp, mtrans);
+    gl.uniformMatrix4fv(mvpLoc, false, mvp);
+    gl.uniform4f(colLoc, 0.7, 0.7, 1.0, 1.0);
 
     gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_BYTE, 0);
 
   }
 
 	// onDebug(deltaMilliseconds) {}
-	// onEvent(event) {}
+	onEvent(event) {
+    camera.viewportResized(event.width,event.height);
+  }
 }
 
 poly = new Poly({}, document.querySelector("#canvas"));
-poly.start(new ExampleLayer());
+poly.start(new ExampleLayer());``

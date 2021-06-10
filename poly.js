@@ -25,6 +25,12 @@ export class Poly {
     Object.assign(this.config, cfg); // override defaults with user-given config.
 
     this.canvas = canvas;
+
+    this.resizeHandler = new EventHandler(
+      "CanvasEvent", 
+      "CanvasResize",
+      this.onResize.bind(this),
+      "PolyOnCanvasResizeHandler");
   }
   start(applicationLayer) {
     this.init();
@@ -45,8 +51,12 @@ export class Poly {
     this.input.init();
     this.renderer.init();
 
-    window.addEventListener("resize", this.onResize.bind(this));
-    this.onResize();
+    window.addEventListener("resize",
+     this.resizeCallback.bind(this));
+    this.onResize(new Event("CanvasEvent", "CanvasResize", {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    }));
 
     this.loopData = {
       rn: Date.now(),
@@ -61,24 +71,32 @@ export class Poly {
     this.update(this.loopData.delta);
     this.loopData.lastFrame = this.loopData.rn;
   }
-
   update(delta) {
     this.renderer.begin();
-    // paintGridDots();
-    // paintCursor();
-    
+
     this.layerStack.layers.forEach((layer) => {
       layer.onUpdate(delta);
     })
 
-    // paintPlausibleSegment();
-    // paintElements();
     this.renderer.end();
   }
-
-  onResize() {
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
+  onEvent(ev) {
+    EventDispatcher.dispatch(ev,
+     this.resizeHandler);
+    // TODO: Forward event through layers correctly.
+    this.layerStack.layers.forEach((layer) => {
+      layer.onEvent(ev);
+    })
+  }
+  resizeCallback() {
+    this.onEvent(new Event("CanvasEvent", "CanvasResize", {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    }));
+  }
+  onResize(event) {
+    this.canvas.width = event.width;
+    this.canvas.height = event.height;
     this.config.pWidth = this.canvas.width;
     this.config.pHeight = this.canvas.height;
 
